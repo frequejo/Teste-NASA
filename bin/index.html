@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+</head>
+<title>NASA Temperature Reading</title>
+
+<body>
+    <form id='output'>
+        <input name="sol" id="sol" type="number" placeholder="Type a Sol" value="0" />
+        <input name='submit' id='submit' type="button" value="Submit" />
+        <p id="temperature_ajax"></p>
+    </form>
+
+</body>
+<script>
+    $(document).ready(function () {
+        api_key = "YGexxLfmpyBLeWM0fp1vzvgeQCC2zR3KR3qABw34"
+        $("#sol , #submit").on('load click keyup', function () {
+            get_average_temperature_ajax(api_key);
+        });
+
+    });
+    var get_average_temperature_ajax = function (api_key) {
+        sol_key_input = $("#sol").val() ? $("#sol").val() : "";
+        $.ajax({
+            url: "https://api.nasa.gov/insight_weather/?api_key=" +
+                api_key + "&feedtype=json&ver=1.0",
+            success: function (jsonReceived) {
+                sol_list = [];
+                average_temperature = 0.0;
+                if (sol_key_input != "") {
+                    if (jsonReceived[sol_key_input]) {
+                        average_temperature = jsonReceived[sol_key_input].AT.av;
+                    } else {
+                        average_temperature = 0.0;
+                    }
+                } else {
+                    count = 0;
+                    jsonReceived.sol_keys.forEach(sol => {
+                        sol_list.push(sol);
+                        count += 1;
+                    });
+                    sol_list.forEach(sol => {
+                        average_temperature += jsonReceived[sol].AT.av;
+                    });
+                    average_temperature = average_temperature / count;
+                }
+                jsonResponse = {
+                    "averageTemperature": average_temperature,
+                };
+                document.getElementById("temperature_ajax").innerHTML = JSON.stringify(jsonResponse);
+            },
+            error: function () {
+                document.getElementById("temperature_ajax").innerHTML = "error with api connection";
+            }
+        });
+    };
+</script>
